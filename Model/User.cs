@@ -22,4 +22,7 @@ public class User
     public ICollection<UserRole> UserRoles { get; set; }
     public string Notes { get; set; }
 
+    public int? CreatedById { get; set; }
+    public virtual User CreatedBy { get; set; }
+
 }
