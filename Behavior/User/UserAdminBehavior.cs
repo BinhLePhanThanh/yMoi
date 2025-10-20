@@ -20,11 +20,9 @@ public class UserAdminBehavior : IUserBehavior
         {
             throw new Exception("User not found");
         }
-
         // Cập nhật toàn bộ field (ngoại trừ CreatedAt, Id, Password nếu muốn giữ)
         _context.Entry(user).CurrentValues.SetValues(request);
         user.UpdatedAt = DateTime.UtcNow;
-
         await _context.SaveChangesAsync();
         Console.WriteLine($"[Admin] Updated user {user.Id} successfully.");
     }

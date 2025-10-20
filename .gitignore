@@ -144,10 +144,10 @@ artifacts/
 .env.*
 
 # Entity Framework Migrations snapshot
-Migrations/
-!**/Migrations/*.cs
-!**/Migrations/*.Designer.cs
-!**/Migrations/*.resx
+# Migrations/
+# !**/Migrations/*.cs
+# !**/Migrations/*.Designer.cs
+# !**/Migrations/*.resx
 
 # Test results
 [Tt]est[Rr]esult*/
