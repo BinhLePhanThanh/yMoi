@@ -148,7 +148,7 @@ artifacts/
 # !**/Migrations/*.cs
 # !**/Migrations/*.Designer.cs
 # !**/Migrations/*.resx
-
+StaticFiles
 # Test results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*

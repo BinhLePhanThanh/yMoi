@@ -5,6 +5,9 @@ using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Diagnostics;
+using yMoi.Service.Interfaces;
+using yMoi.Service;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -97,7 +100,9 @@ builder.Services.AddScoped<IUserBehavior, UserAdminBehavior>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<UserRoleService>();
 builder.Services.AddScoped<IUserRoleBehavior, UserRoleAdminBehavior>();
-
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
+builder.Services.AddScoped<IUnitService, UnitService>();
+builder.Services.AddScoped<IUploadFileService, UploadFileService>();
 // =====================================================
 // 🧩 6. CORS
 // =====================================================
@@ -199,6 +204,12 @@ app.UseRouting();
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(builder.Environment.ContentRootPath, "StaticFiles")),
+    RequestPath = "/static-files"
+});
 
 app.MapControllers();
 app.UseExceptionHandler(errorApp =>
@@ -219,6 +230,13 @@ app.UseExceptionHandler(errorApp =>
         await context.Response.WriteAsJsonAsync(result);
     });
 });
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    dbContext.Database.Migrate();
+}
+
 // =====================================================
 // 🧩 9. Run
 // =====================================================
