@@ -17,4 +17,5 @@ public class CreateUserRequest
     public string Regilion { get; set; }
     public string Country { get; set; }
     public string Notes { get; set; }
+    public int? CreatedById { get; set; }
 }

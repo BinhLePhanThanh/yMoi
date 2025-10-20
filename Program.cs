@@ -103,6 +103,9 @@ builder.Services.AddScoped<IUserRoleBehavior, UserRoleAdminBehavior>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IUnitService, UnitService>();
 builder.Services.AddScoped<IUploadFileService, UploadFileService>();
+builder.Services.AddScoped<IServiceService, ServiceService>();
+builder.Services.AddScoped<IMedicineService, MedicineService>();
+
 // =====================================================
 // 🧩 6. CORS
 // =====================================================

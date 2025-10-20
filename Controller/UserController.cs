@@ -59,6 +59,7 @@ public class UserController : ControllerBase
         }
         int callerUserId = int.Parse(userIdClaim.Value);
         // 🔹 Gọi service
+        request.CreatedById = callerUserId;
         await _userService.HandleAsync(request, callerUserId, roles);
         return Ok(new { Message = "Create request handled successfully." });
     }

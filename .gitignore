@@ -10,7 +10,8 @@
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
-
+app.db-wal
+app.db-shm
 # Build results
 [Bb]in/
 [Oo]bj/
