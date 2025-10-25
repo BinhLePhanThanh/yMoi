@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -78,9 +79,26 @@ public class UserController : ControllerBase
         var result = await _userService.HandleGetPagedAsync(request.QueryParams, callerUserId, request.Roles);
         return result == null ? NotFound("No users found.") : Ok(result);
     }
+
+    [HttpGet("details")]
+    [Authorize] // bắt buộc phải có JWT token
+    public async Task<IActionResult> GetDetails()
+    {
+        // 🔹 Lấy callerUserId từ Claim
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("Invalid token: missing NameIdentifier claim.");
+        }
+        int userId = int.Parse(userIdClaim.Value);
+
+        var result = await _userService.GetUserDetails(userId);
+        return result == null ? NotFound("User not found.") : Ok(result);
+    }
+
     [HttpGet("{id}")]
     [Authorize] // bắt buộc phải có JWT token
-    public async Task<IActionResult> GetById(int id, [FromQuery] List<string> roles)
+    public async Task<IActionResult> GetById(int id, string? roles)
     {
         // 🔹 Lấy callerUserId từ Claim
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -90,9 +108,12 @@ public class UserController : ControllerBase
         }
         int callerUserId = int.Parse(userIdClaim.Value);
 
-        var result = await _userService.HandleGetByIdAsync(id, callerUserId, roles);
+        var listRoles = !string.IsNullOrEmpty(roles) ? roles.Split(",").Select(a => a.Trim()) : new List<string>();
+
+        var result = await _userService.HandleGetByIdAsync(id, callerUserId, listRoles);
         return result == null ? NotFound("User not found.") : Ok(result);
     }
+
     [HttpDelete("{id}")]
     [Authorize] // bắt buộc phải có JWT token
     public async Task<IActionResult> Delete(int id, [FromQuery] List<string> roles)

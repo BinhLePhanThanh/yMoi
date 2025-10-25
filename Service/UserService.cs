@@ -178,4 +178,41 @@ public class UserService
         var behavior = matchedBehaviors.First();
         await behavior.ExecuteDeleteAsync(id);
     }
+
+    public async Task<GetUserDetailsModel> GetUserDetails(int id)
+    {
+        var user = await _context.Users.Where(a => a.Id == id)
+            .Select(a => new GetUserDetailsModel
+            {
+                Id = a.Id,
+                Name = a.Name,
+                Email = a.Email,
+                CreatedAt = a.CreatedAt,
+                UpdatedAt = a.UpdatedAt,
+                IsActive = a.IsActive,
+                Username = a.Username,
+                JobTitle = a.JobTitle,
+                Department = a.Department,
+                PhoneNumber = a.PhoneNumber,
+                IdentificationNumber = a.IdentificationNumber,
+                DateOfBirth = a.DateOfBirth,
+                Gender = a.Gender,
+                MarriageStatus = a.MarriageStatus,
+                Language = a.Language,
+                EducationLevel = a.EducationLevel,
+                Regilion = a.Regilion,
+                Country = a.Country,
+                Notes = a.Notes,
+                UserRoles = a.UserRoles.Select(n => new GetUserDetailsRolesModel
+                {
+                    RoleId = n.RoleId,
+                    RoleName = n.Role.Name
+                }).ToList(),
+                CreatedById = a.CreatedById,
+                CreatedByName = a.CreatedBy.Name
+            })
+            .FirstOrDefaultAsync();
+
+        return user;
+    }
 }
