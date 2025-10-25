@@ -43,7 +43,8 @@ namespace yMoi.Service
                 ReferenceLimit2 = dto.ReferenceLimit2,
                 TurnaroundTime = dto.TurnaroundTime,
                 ToolFeatures = dto.ToolFeatures,
-                CreatedById = createById
+                CreatedById = createById,
+                Note = dto.Note
             };
 
             await _dbContext.Services.AddAsync(service);
@@ -107,6 +108,7 @@ namespace yMoi.Service
             service.ReferenceLimit2 = dto.ReferenceLimit2;
             service.TurnaroundTime = dto.TurnaroundTime;
             service.ToolFeatures = dto.ToolFeatures;
+            service.Note = dto.Note;
 
             var existFileIds = dto.Files.Where(a => a.Id.HasValue).Select(a => a.Id.Value).ToList();
 
@@ -164,6 +166,7 @@ namespace yMoi.Service
                 Status = a.Status,
                 DepartmentId = a.DepartmentId,
                 DepartmentName = a.Department.Name,
+                Type = a.Type,
             }).Skip((page - 1) * limit).Take(limit).ToListAsync();
 
             return JsonResponse.Success(list, new PagingModel
@@ -196,11 +199,13 @@ namespace yMoi.Service
                 CreatedById = a.CreatedById,
                 CreatedByName = a.CreatedBy.Name,
                 CreatedDate = a.CreatedDate,
+                Note = a.Note,
                 Files = a.ServiceFiles.Where(b => b.IsActive == true).Select(b => new CreateServiceFileDto
                 {
                     Id = b.Id,
                     Name = b.Name,
-                    Url = b.Url
+                    Url = b.Url,
+                    CreatedDate = b.CreatedDate
                 }).ToList(),
             }).FirstOrDefaultAsync();
 
