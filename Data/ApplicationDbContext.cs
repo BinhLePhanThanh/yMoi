@@ -17,6 +17,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<ServiceFile> ServiceFiles { get; set; }
     public DbSet<Medicine> Medicines { get; set; }
     public DbSet<MedicineFile> MedicineFiles { get; set; }
+    public DbSet<CustomerGroup> CustomerGroups { get; set; }
+    public DbSet<CustomerAction> CustomerActions { get; set; }
+    public DbSet<CustomerActionHistory> CustomerActionHistories { get; set; }
 
     #region Required
     protected override void OnModelCreating(ModelBuilder builder)

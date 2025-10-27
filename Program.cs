@@ -1,13 +1,14 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Diagnostics;
-using yMoi.Service.Interfaces;
-using yMoi.Service;
+using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.IdentityModel.Tokens;
+using System;
+using System.Text;
+using yMoi.Service;
+using yMoi.Service.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -105,7 +106,12 @@ builder.Services.AddScoped<IUnitService, UnitService>();
 builder.Services.AddScoped<IUploadFileService, UploadFileService>();
 builder.Services.AddScoped<IServiceService, ServiceService>();
 builder.Services.AddScoped<IMedicineService, MedicineService>();
+builder.Services.AddScoped<ICustomerGroupService, CustomerGroupService>();
 
+builder.Services.AddSpaStaticFiles(configuration =>
+{
+    configuration.RootPath = "FrontEnd";
+});
 // =====================================================
 // 🧩 6. CORS
 // =====================================================
@@ -213,8 +219,22 @@ app.UseStaticFiles(new StaticFileOptions
         Path.Combine(builder.Environment.ContentRootPath, "StaticFiles")),
     RequestPath = "/static-files"
 });
+if (builder.Environment.EnvironmentName != "Development")
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "FrontEnd")),
+        RequestPath = ""
+    });
 
+}
 app.MapControllers();
+
+app.UseSpa(spa =>
+{
+    spa.Options.SourcePath = "FrontEnd";
+});
+
 app.UseExceptionHandler(errorApp =>
 {
     errorApp.Run(async context =>

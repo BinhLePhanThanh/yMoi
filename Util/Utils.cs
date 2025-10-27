@@ -1,3 +1,4 @@
+using DocumentFormat.OpenXml.Wordprocessing;
 using System.Text;
 
 namespace yMoi.Util
@@ -18,6 +19,11 @@ namespace yMoi.Util
                 return builder.ToString().ToLower();
             else
                 return builder.ToString().ToUpper();
+        }
+
+        public static string CamelCaseFromTitleCase(string name)
+        {
+            return Char.ToLowerInvariant(name[0]) + name.Substring(1);
         }
     }
 }
