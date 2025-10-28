@@ -24,7 +24,6 @@ jobs:
       
     - name: Build
       run: |
-        cd yMoi
         dotnet build --configuration Release --no-restore
         dotnet publish -c Release -o ./publish
     
