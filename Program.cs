@@ -107,6 +107,7 @@ builder.Services.AddScoped<IUploadFileService, UploadFileService>();
 builder.Services.AddScoped<IServiceService, ServiceService>();
 builder.Services.AddScoped<IMedicineService, MedicineService>();
 builder.Services.AddScoped<ICustomerGroupService, CustomerGroupService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
 
 builder.Services.AddSpaStaticFiles(configuration =>
 {

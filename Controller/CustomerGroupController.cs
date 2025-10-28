@@ -28,6 +28,13 @@ namespace yMoi.Controller
             return await _customerGroupService.GetListCustomerGroup(page, limit, status, search, fromDate, toDate);
         }
 
+        [HttpGet("{id}/customers")]
+        [Authorize]
+        public async Task<JsonResponseModel> GetCustomerGroupCustomers(int id, int page = 1, int limit = 12)
+        {
+            return await _customerGroupService.GetCustomerGroupCustomers(id, page, limit);
+        }
+
         [HttpGet("{id}/histories")]
         [Authorize]
         public async Task<JsonResponseModel> GetCustomerGroupHistories(int id, int page = 1, int limit = 12)

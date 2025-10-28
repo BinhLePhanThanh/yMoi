@@ -174,6 +174,27 @@ namespace yMoi.Service
             return JsonResponse.Success(model);
         }
 
+        public async Task<JsonResponseModel> GetCustomerGroupCustomers(int id, int page, int limit)
+        {
+            var query = _dbContext.Customers.Where(a => a.IsActive == true && a.CustomerGroupId == id
+            );
+
+            var count = await query.CountAsync();
+            var list = await query.OrderByDescending(a => a.Id).Select(a => new GetListCustomerGroupCustomer
+            {
+                Id = a.Id,
+                Name = a.Name,
+                Code = a.Code
+            }).Skip((page - 1) * limit).Take(limit).ToListAsync();
+
+            return JsonResponse.Success(list, new PagingModel
+            {
+                Page = page,
+                Limit = limit,
+                TotalItemCount = count
+            });
+        }
+
         public async Task<JsonResponseModel> GetCustomerGroupDetails(int id)
         {
             var model = await _dbContext.CustomerGroups.Where(a => a.Id == id).Select(a => new GetListCustomerGroupModel
@@ -198,7 +219,9 @@ namespace yMoi.Service
 
         public async Task<JsonResponseModel> GetCustomerGroupHistory(int id, int page, int limit)
         {
-            var query = _dbContext.CustomerActions.Where(a => a.IsActive == true && a.CustomerGroupId == id);
+            var query = _dbContext.CustomerActions.Where(a => a.IsActive == true && a.CustomerGroupId == id
+                && a.CustomerActionHistories.Where(b => b.IsActive == true).FirstOrDefault() != null
+            );
 
             var count = await query.CountAsync();
             var list = await query.OrderByDescending(a => a.Id).Select(a => new CustomerGroupHistoryModel
