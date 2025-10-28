@@ -36,3 +36,4 @@ jobs:
         password: ${{ secrets.PASSWORD }}
         local_path: './publish/*'
         remote_path: '/wwwroot'
+        sftp_only: true
