@@ -1,0 +1,40 @@
+# .github/workflows/cicd.yml
+name: deploy
+on:
+  push:
+    branches: [develop]
+
+env:
+  DOTNET_VERSION: '8.0.402' # The .NET SDK version to use
+
+jobs:
+  publish:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Install dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: |
+        cd yMoi
+        dotnet build --configuration Release --no-restore
+        dotnet publish -c Release -o ./publish
+    
+    - name: Deploy to Server
+      uses: wlixcc/SFTP-Deploy-Action@v1.2.6
+      with:
+        username: ${{ secrets.USERNAME }}
+        server:  ${{ secrets.HOST }}
+        port: 22
+        password: ${{ secrets.PASSWORD }}
+        local_path: './publish/*'
+        remote_path: '/wwwroot'
+        sftpArgs: '-o ConnectTimeout=5'
