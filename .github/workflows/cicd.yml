@@ -34,4 +34,4 @@ jobs:
         server:  ${{ secrets.HOST }}
         password: ${{ secrets.PASSWORD }}
         local-dir: './publish/'
-        server-dir: '/wwwroot'
+        server-dir: '/wwwroot/'
