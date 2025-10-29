@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using yMoi.Dto;
 using yMoi.Dto.Customer;
+using yMoi.Dto.Upload;
 using yMoi.Service.Interfaces;
 
 namespace yMoi.Controller
@@ -26,6 +27,20 @@ namespace yMoi.Controller
         {
             return await _customerService.GetListCustomer(page, limit, status, search, fromDate, toDate);
         }
+
+        [HttpGet("Search")]
+        [Authorize]
+        public async Task<JsonResponseModel> GetListSearchCustomer(string? code, string? name, string? phone, DateTime? dob, string? nationality, string? identityCardNumber, int page = 1, int limit = 12)
+        {
+            return await _customerService.GetListSearchCustomer(code, phone, name, dob, nationality, identityCardNumber, page, limit);
+        }
+
+        [HttpPost("Import")]
+        public async Task<JsonResponseModel> ImportCustomer([FromForm] UploadFilesDto dto)
+        {
+            return await _customerService.ImportCustomer(dto.Files[0]);
+        }
+
 
         [HttpGet("{id}/histories")]
         [Authorize]

@@ -96,7 +96,7 @@ namespace yMoi.Model
 
         public int? CustomerGroupId { get; set; }
         public DateTime UpdatedDate { get; set; } = DateTime.UtcNow;
-        public int CreatedById { get; set; }
+        public int? CreatedById { get; set; }
         public virtual User CreatedBy { get; set; }
         public virtual CustomerGroup CustomerGroup { get; set; }
 

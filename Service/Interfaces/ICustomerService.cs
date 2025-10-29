@@ -14,5 +14,7 @@ namespace yMoi.Service.Interfaces
         Task<JsonResponseModel> EditCustomer(int id, CreateCustomerModel dto, int updatedById);
         Task<JsonResponseModel> DeleteCustomer(int id);
         Task<JsonResponseModel> ToggleStatus(int id);
+        Task<JsonResponseModel> GetListSearchCustomer(string? code, string? name, string? phone, DateTime? dob, string? nationality, string? identityCardNumber, int page = 1, int limit = 12);
+        Task<JsonResponseModel> ImportCustomer(IFormFile file);
     }
 }

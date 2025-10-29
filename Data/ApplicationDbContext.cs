@@ -21,6 +21,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<CustomerAction> CustomerActions { get; set; }
     public DbSet<Customer> Customers { get; set; }
     public DbSet<CustomerActionHistory> CustomerActionHistories { get; set; }
+    public DbSet<ProvinceV2> ProvinceV2s { get; set; }
+    public DbSet<WardV2> WardV2s { get; set; }
 
     #region Required
     protected override void OnModelCreating(ModelBuilder builder)

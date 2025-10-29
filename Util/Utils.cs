@@ -25,5 +25,31 @@ namespace yMoi.Util
         {
             return Char.ToLowerInvariant(name[0]) + name.Substring(1);
         }
+
+        public static string GenerateBNCode()
+        {
+            string chars = "0123456789";
+
+            Random random = new Random();
+
+            string randomString = new string(Enumerable.Repeat(chars, 8)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+
+
+            return "BN-" + randomString;
+        }
+
+        public static string GenerateNBNCode()
+        {
+            string chars = "0123456789";
+
+            Random random = new Random();
+
+            string randomString = new string(Enumerable.Repeat(chars, 8)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+
+
+            return "NBN-" + randomString;
+        }
     }
 }

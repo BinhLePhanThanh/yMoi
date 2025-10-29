@@ -1,4 +1,5 @@
-﻿using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
+﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using yMoi.Dto;
@@ -22,11 +23,20 @@ namespace yMoi.Service
 
         public async Task<JsonResponseModel> CreateCustomer(CreateCustomerModel dto, int createById)
         {
-            var existCode = await _dbContext.Customers.Where(a => a.IsActive == true && !string.IsNullOrEmpty(a.Code) && a.Code == dto.Code).FirstOrDefaultAsync();
+            var existCode = await _dbContext.Customers.Where(a => a.IsActive == true && !string.IsNullOrEmpty(dto.Code) && a.Code == dto.Code).FirstOrDefaultAsync();
 
             if (existCode != null)
             {
                 return JsonResponse.Error(0, "Mã khách hàng đã tồn tại");
+            }
+
+            if (string.IsNullOrEmpty(dto.Code))
+            {
+                do
+                {
+                    dto.Code = Utils.GenerateBNCode();
+                    existCode = await _dbContext.Customers.Where(a => a.Code == dto.Code && a.IsActive == true).FirstOrDefaultAsync();
+                } while (existCode != null);
             }
 
             var customer = new Customer
@@ -337,12 +347,234 @@ namespace yMoi.Service
             });
         }
 
+        public async Task<JsonResponseModel> GetListSearchCustomer(string? code, string? name, string? phone, DateTime? dob, string? nationality, string? identityCardNumber, int page = 1, int limit = 12)
+        {
+            var query = _dbContext.Customers.Where(a => a.IsActive == true
+                    && (!string.IsNullOrEmpty(code) ? a.Code.Contains(code) : true)
+                    && (!string.IsNullOrEmpty(name) ? a.Name.Contains(name) : true)
+                    && (!string.IsNullOrEmpty(nationality) ? a.Nationality.Contains(nationality) : true)
+                    && (!string.IsNullOrEmpty(identityCardNumber) ? a.IdentityCardNumber.Contains(identityCardNumber) : true)
+                    && (!string.IsNullOrEmpty(phone) ? a.Phone.Contains(phone) : true)
+                    && (dob.HasValue ? a.Dob.Value.Date == dob.Value.Date : true)
+            );
+
+            var count = await query.CountAsync();
+
+            var list = await query.OrderByDescending(a => a.Id).Select(a => new GetListCustomerModel
+            {
+                Id = a.Id,
+                Status = a.Status,
+                Name = a.Name,
+                Code = a.Code,
+                Phone = a.Phone,
+                Dob = a.Dob,
+                Address = a.Address,
+                Gender = a.Gender,
+                CreatedDate = a.CreatedDate,
+                CreatedById = a.CreatedById,
+                CreatedByName = a.CreatedBy.Name,
+                BankCode = a.BankCode,
+                IdentityCardNumber = a.IdentityCardNumber,
+                AccountHolder = a.AccountHolder,
+                AccountNumber = a.AccountNumber
+            }).Skip((page - 1) * limit).Take(limit).ToListAsync();
+
+            return JsonResponse.Success(list, new PagingModel
+            {
+                Page = page,
+                Limit = limit,
+                TotalItemCount = count
+            });
+        }
+
         public async Task<JsonResponseModel> ToggleStatus(int id)
         {
             var customer = await _dbContext.Customers.Where(a => a.Id == id).FirstOrDefaultAsync();
             if (customer != null)
             {
                 customer.Status = !customer.Status;
+                await _dbContext.SaveChangesAsync();
+            }
+            return JsonResponse.Success(new { });
+        }
+
+        public async Task<JsonResponseModel> ImportCustomer(IFormFile file)
+        {
+            using var memStrem = new MemoryStream();
+
+            await file.CopyToAsync(memStrem);
+
+            using var workbook = new XLWorkbook(memStrem);
+            var worksheet = workbook.Worksheets.First();
+
+            var row1 = worksheet.Rows().First();
+
+            var hoVaTenCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "họ và tên")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var maKhachHangCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "mã khách hàng")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var maNhomCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "mã nhóm")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var ngaySinhCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "ngày sinh")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var gioiTinhCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "giới tính")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var tinhTrangHonNhanCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "tình trạng hôn nhân")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var ngheNghiepCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "nghề nghiệp")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var ngonNguCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "ngôn ngữ")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var trinhDoHocVanCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "trình độ học vấn")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var tonGiaoCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "tôn giáo")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var quocTichCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "quốc tịch")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var soCccdCol = row1.Cells().Where(a => a.Value.ToString().ToLower().Contains("cccd")
+                || a.Value.ToString().ToLower().Contains("hộ chiếu")
+                || a.Value.ToString().ToLower().Contains("cmt"))
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var emailCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "email")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var diaChiCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "địa chỉ")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var phuongXaCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "phường/xã")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var tinhCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "tỉnh")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var quocGiaCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "quốc gia")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var maBuuDienCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "mã bưu điện")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var soDienThoaiCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "số điện thoại")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var tenNguoiThanCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "tên người thân")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var kieuQuanHeCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "kiểu quan hệ")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var diaChiNguoiThanCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "địa chỉ người thân")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var tinhNguoiThanCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "tỉnh người thân")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var quocGiaNguoiThanCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "quốc gia người thân")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var maBuuDienNguoiThanCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "mã bưu điện người thân")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var phuongXaNguoiThanCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "phường/ xã người thân")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+
+            var soDienThoaiNguoiThanCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "số điện thoại người thân")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var nganHangCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "ngân hàng")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var soTaiKhoanCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "số tài khoản")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            var chuTaiKhoanCol = row1.Cells().Where(a => a.Value.ToString().ToLower() == "chủ tài khoản")
+                .Select(a => a.Worksheet.Position).FirstOrDefault();
+
+            foreach (var row in worksheet.RowsUsed())
+            {
+                if (row.RowNumber() == 1) continue;
+
+                var code = maKhachHangCol != 0 ? row.Cell(maKhachHangCol).Value.ToString() : string.Empty;
+
+                var customerGroupCode = maNhomCol != 0 ? row.Cell(maNhomCol).Value.ToString() : null;
+
+                int? customerGroupId = null;
+
+                if (!string.IsNullOrEmpty(customerGroupCode))
+                {
+                    var customerGroup = await _dbContext.CustomerGroups.Where(a => a.Code == customerGroupCode && a.IsActive == true).FirstOrDefaultAsync();
+                    if (customerGroup != null)
+                    {
+                        customerGroupId = customerGroup.Id;
+                    }
+                }
+
+                var existCode = await _dbContext.Customers.Where(a => a.Code == code && a.IsActive == true).FirstOrDefaultAsync();
+
+                while (existCode != null)
+                {
+                    code = Utils.GenerateBNCode();
+                    existCode = await _dbContext.Customers.Where(a => a.Code == code && a.IsActive == true).FirstOrDefaultAsync();
+                }
+
+                var province = await _dbContext.ProvinceV2s.Where(a => a.IsActive == true && a.Name.ToLower() == (tinhCol != 0 ? row.Cell(tinhCol).Value.ToString() : string.Empty)).FirstOrDefaultAsync();
+                var ward = await _dbContext.WardV2s.Where(a => a.IsActive == true && a.Name.ToLower() == (phuongXaCol != 0 ? row.Cell(phuongXaCol).Value.ToString() : string.Empty)).FirstOrDefaultAsync();
+
+                var relativeProvince = await _dbContext.ProvinceV2s.Where(a => a.IsActive == true && a.Name.ToLower() == (tinhNguoiThanCol != 0 ? row.Cell(tinhNguoiThanCol).Value.ToString() : string.Empty)).FirstOrDefaultAsync();
+                var relativeWward = await _dbContext.WardV2s.Where(a => a.IsActive == true && a.Name.ToLower() == (phuongXaNguoiThanCol != 0 ? row.Cell(phuongXaNguoiThanCol).Value.ToString() : string.Empty)).FirstOrDefaultAsync();
+
+                var newCustomer = new Customer
+                {
+                    Code = code,
+                    Name = hoVaTenCol != 0 ? row.Cell(hoVaTenCol).Value.ToString() : null,
+                    Phone = soDienThoaiCol != 0 ? row.Cell(soDienThoaiCol).Value.ToString() : null,
+                    Dob = ngaySinhCol != 0 ? row.Cell(ngaySinhCol).GetDateTime() : null,
+                    Email = emailCol != 0 ? row.Cell(emailCol).Value.ToString() : null,
+                    Job = ngheNghiepCol != 0 ? row.Cell(ngheNghiepCol).Value.ToString() : null,
+                    Address = diaChiCol != 0 ? row.Cell(diaChiCol).Value.ToString() : null,
+                    PostalCode = maBuuDienCol != 0 ? row.Cell(maBuuDienCol).Value.ToString() : null,
+                    Country = quocGiaCol != 0 ? Constants.Contants.nationalities.Where(a => a.Name.ToLower() == row.Cell(quocGiaCol).Value.ToString()).Select(a => a.Code).FirstOrDefault() : null,
+                    Language = ngonNguCol != 0 ? Constants.Contants.languages.Where(a => a.Name.ToLower() == row.Cell(ngonNguCol).Value.ToString()).Select(a => a.Code).FirstOrDefault() : null,
+                    Religion = tonGiaoCol != 0 ? row.Cell(tonGiaoCol).Value.ToString() : null,
+                    Nationality = quocTichCol != 0 ? Constants.Contants.nationalities.Where(a => a.Name.ToLower() == row.Cell(quocTichCol).Value.ToString()).Select(a => a.Code).FirstOrDefault() : null,
+                    IdentityCardNumber = soCccdCol != 0 ? row.Cell(soCccdCol).Value.ToString() : null,
+                    EducationalLevel = trinhDoHocVanCol != 0 ? Constants.Contants.educationLevels.Where(a => a.Name.ToLower() == row.Cell(trinhDoHocVanCol).Value.ToString().ToLower()).Select(a => a.Code).FirstOrDefault() : null,
+                    MaritalStatus = tinhTrangHonNhanCol != 0 ? row.Cell(tinhTrangHonNhanCol).Value.ToString() : null,
+                    Gender = gioiTinhCol != 0 ? row.Cell(gioiTinhCol).Value.ToString().ToLower() == "nam" ? GenderEnum.Male : row.Cell(gioiTinhCol).Value.ToString().ToLower() == "nữ" ? GenderEnum.Female : null : null,
+
+                    ProvinceId = province?.Id,
+                    WardId = ward?.Id,
+
+                    RelativeName = tenNguoiThanCol != 0 ? row.Cell(tenNguoiThanCol).Value.ToString() : null,
+                    Relationship = kieuQuanHeCol != 0 ? row.Cell(kieuQuanHeCol).Value.ToString() : null,
+                    RelationshipAddress = diaChiNguoiThanCol != 0 ? row.Cell(diaChiNguoiThanCol).Value.ToString() : null,
+
+                    RelativeWardId = relativeWward?.Id,
+                    RelativeProvinceId = relativeProvince?.Id,
+
+                    RelativeCountry = quocGiaNguoiThanCol != 0 ? row.Cell(quocGiaNguoiThanCol).Value.ToString() : null,
+                    RelativePostalCode = maBuuDienNguoiThanCol != 0 ? row.Cell(maBuuDienNguoiThanCol).Value.ToString() : null,
+                    RelativePhone = soDienThoaiNguoiThanCol != 0 ? row.Cell(soDienThoaiNguoiThanCol).Value.ToString() : null,
+
+                    BankCode = nganHangCol != 0 ? row.Cell(nganHangCol).Value.ToString() : null,
+                    AccountNumber = soTaiKhoanCol != 0 ? row.Cell(soTaiKhoanCol).Value.ToString() : null,
+                    AccountHolder = chuTaiKhoanCol != 0 ? row.Cell(chuTaiKhoanCol).Value.ToString() : null,
+                    CustomerGroupId = customerGroupId
+                };
+
+                await _dbContext.Customers.AddAsync(newCustomer);
                 await _dbContext.SaveChangesAsync();
             }
 

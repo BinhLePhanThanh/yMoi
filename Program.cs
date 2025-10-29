@@ -1,3 +1,4 @@
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics;
@@ -65,7 +66,16 @@ builder.Services.AddControllers(options =>
 // 🧩 3. Database (SQLite)
 // =====================================================
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    var databasePath = connectionString.Split("=")[1];
+
+    if (!File.Exists(databasePath))
+    {
+        throw new FileNotFoundException($"SQLite database file not found at: {databasePath}");
+    }
+    options.UseSqlite(connectionString);
+});
 
 // =====================================================
 // 🧩 4. JWT configuration
@@ -108,6 +118,7 @@ builder.Services.AddScoped<IServiceService, ServiceService>();
 builder.Services.AddScoped<IMedicineService, MedicineService>();
 builder.Services.AddScoped<ICustomerGroupService, CustomerGroupService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IAddressService, AddressService>();
 
 builder.Services.AddSpaStaticFiles(configuration =>
 {

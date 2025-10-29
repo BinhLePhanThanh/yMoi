@@ -25,11 +25,20 @@ namespace yMoi.Service
 
         public async Task<JsonResponseModel> CreateCustomerGroup(CreateCustomerGroupModel dto, int createById)
         {
-            var existCustomerGroup = await _dbContext.CustomerGroups.Where(a => a.IsActive == true && !string.IsNullOrEmpty(a.Code) && a.Code == dto.Code).FirstOrDefaultAsync();
+            var existCustomerGroup = await _dbContext.CustomerGroups.Where(a => a.IsActive == true && !string.IsNullOrEmpty(dto.Code) && a.Code == dto.Code).FirstOrDefaultAsync();
 
             if (existCustomerGroup != null)
             {
                 return JsonResponse.Error(0, "Mã nhóm đã tồn tại");
+            }
+
+            if (string.IsNullOrEmpty(dto.Code))
+            {
+                do
+                {
+                    dto.Code = Utils.GenerateNBNCode();
+                    existCustomerGroup = await _dbContext.CustomerGroups.Where(a => a.Code == dto.Code && a.IsActive == true).FirstOrDefaultAsync();
+                } while (existCustomerGroup != null);
             }
 
             var newCustomerGroup = new CustomerGroup
