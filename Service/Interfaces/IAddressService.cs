@@ -6,6 +6,6 @@ namespace yMoi.Service.Interfaces
     {
         Task<JsonResponseModel> GetProvinceV2();
         Task<JsonResponseModel> GetWardV2(int provinceId);
-        Task SyncAddress();
+        Task<JsonResponseModel> SyncAddress();
     }
 }

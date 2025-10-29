@@ -15,6 +15,9 @@ namespace yMoi.Service.Interfaces
         Task<JsonResponseModel> DeleteCustomerGroup(int id);
         Task<JsonResponseModel> ToggleStatus(int id);
         Task<JsonResponseModel> GetCustomerGroupCustomers(int id, int page, int limit);
+        Task<JsonResponseModel> AddCustomerToGroup(AddCustomerIdsModel dto);
+        Task<JsonResponseModel> RemoveCustomerFromGroup(AddCustomerIdsModel dto);
+
 
     }
 }

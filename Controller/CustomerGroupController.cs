@@ -66,6 +66,26 @@ namespace yMoi.Controller
             return await _customerGroupService.CreateCustomerGroup(dto, int.Parse(userId));
         }
 
+        [HttpPost("AddCustomerToGroup")]
+        [Authorize]
+        public async Task<JsonResponseModel> AddCustomerToGroup(AddCustomerIdsModel dto)
+        {
+            var currentUser = HttpContext.User;
+            string userId = currentUser.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            return await _customerGroupService.AddCustomerToGroup(dto);
+        }
+
+        [HttpPost("RemoveCustomerFromGroup")]
+        [Authorize]
+        public async Task<JsonResponseModel> RemoveCustomerFromGroup(AddCustomerIdsModel dto)
+        {
+            var currentUser = HttpContext.User;
+            string userId = currentUser.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            return await _customerGroupService.RemoveCustomerFromGroup(dto);
+        }
+
         [HttpPut("{id}")]
         [Authorize]
         public async Task<JsonResponseModel> EditCustomerGroup(int id, CreateCustomerGroupModel dto)

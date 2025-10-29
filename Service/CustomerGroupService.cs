@@ -23,6 +23,20 @@ namespace yMoi.Service
             _dbContext = dbContext;
         }
 
+        public async Task<JsonResponseModel> AddCustomerToGroup(AddCustomerIdsModel dto)
+        {
+            var customers = await _dbContext.Customers.Where(a => dto.ListIds.Contains(a.Id) && a.IsActive == true).ToListAsync();
+
+            foreach (var customer in customers)
+            {
+                customer.CustomerGroupId = dto.CustomerGroupId;
+            }
+
+            await _dbContext.SaveChangesAsync();
+
+            return JsonResponse.Success(new { });
+        }
+
         public async Task<JsonResponseModel> CreateCustomerGroup(CreateCustomerGroupModel dto, int createById)
         {
             var existCustomerGroup = await _dbContext.CustomerGroups.Where(a => a.IsActive == true && !string.IsNullOrEmpty(dto.Code) && a.Code == dto.Code).FirstOrDefaultAsync();
@@ -193,7 +207,8 @@ namespace yMoi.Service
             {
                 Id = a.Id,
                 Name = a.Name,
-                Code = a.Code
+                Code = a.Code,
+                Phone = a.Phone
             }).Skip((page - 1) * limit).Take(limit).ToListAsync();
 
             return JsonResponse.Success(list, new PagingModel
@@ -288,6 +303,20 @@ namespace yMoi.Service
                 Limit = limit,
                 TotalItemCount = count
             });
+        }
+
+        public async Task<JsonResponseModel> RemoveCustomerFromGroup(AddCustomerIdsModel dto)
+        {
+            var customers = await _dbContext.Customers.Where(a => dto.ListIds.Contains(a.Id) && a.IsActive == true).ToListAsync();
+
+            foreach (var customer in customers)
+            {
+                customer.CustomerGroupId = null;
+            }
+
+            await _dbContext.SaveChangesAsync();
+
+            return JsonResponse.Success(new { });
         }
 
         public async Task<JsonResponseModel> ToggleStatus(int id)

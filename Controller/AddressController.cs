@@ -32,8 +32,7 @@ namespace yMoi.Controller
         [HttpPost("SyncAddress")]
         public async Task<JsonResponseModel> SyncAddress()
         {
-            await _addressService.SyncAddress();
-            return JsonResponse.Success(new { });
+            return await _addressService.SyncAddress();
         }
     }
 }

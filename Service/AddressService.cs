@@ -32,15 +32,15 @@ namespace yMoi.Service
         }
 
 
-        public async Task SyncAddress()
+        public async Task<JsonResponseModel> SyncAddress()
         {
             try
             {
+                var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Add("User-Agent", @"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36");
+
                 var url = "https://vietnamlabs.com/api/vietnamprovince";
-                var req = HttpWebRequest.Create(string.Format(url));
-                req.Method = "GET";
-                var response = (HttpWebResponse)req.GetResponse();
-                var jsonResponse = new StreamReader(response.GetResponseStream()).ReadToEnd();
+                var jsonResponse = await httpClient.GetStringAsync(url);
 
                 var provinces = JsonConvert.DeserializeObject<VietnamLabResponseModel>(jsonResponse).data;
 
@@ -86,10 +86,12 @@ namespace yMoi.Service
                         await _dbContext.SaveChangesAsync();
                     }
                 }
+
+                return JsonResponse.Success(new { });
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                return JsonResponse.Error(0, ex.ToString());
             }
         }
     }
