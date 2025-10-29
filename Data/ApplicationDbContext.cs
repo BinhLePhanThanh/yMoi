@@ -19,6 +19,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<MedicineFile> MedicineFiles { get; set; }
     public DbSet<CustomerGroup> CustomerGroups { get; set; }
     public DbSet<CustomerAction> CustomerActions { get; set; }
+    public DbSet<Customer> Customers { get; set; }
     public DbSet<CustomerActionHistory> CustomerActionHistories { get; set; }
 
     #region Required
